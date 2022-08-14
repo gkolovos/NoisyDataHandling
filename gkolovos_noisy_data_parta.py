@@ -32,7 +32,7 @@ df = spark.read.csv("/content/kaggleDATAset/heart.csv", header=True, inferSchema
 
 df.show()
 
-##### metatrepw oles tis katigorimatikes (px F h' M, TA h' ASY klp klp) times se arithmous gia na eisagw thoryvo
+##### converting categorical values (F or M, TA or ASY etc etc) into numeric ones
 
 #immportance of chest pain type
 def ChestPainType_importance(col):
