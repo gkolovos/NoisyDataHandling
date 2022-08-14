@@ -2,7 +2,7 @@
 
 ## its the second part of the script
 ## the first part creates noise and null and outliers in a given dataset
-## in this part we take as input the first noisy dataset that we created, the out.csv
+## in this part we take as input the first noisy dataset that we created (out.csv)
 ## the out.csv can be found on https://github.com/gkolovos/kaggleDATAset
 ## in this part we handle  the outliers and the null valies
 ## then we upply the Grid Search CV model we created in order the evaluate its metrics
@@ -32,7 +32,7 @@ df = spark.read.csv("/content/kaggleDATAset/out.csv", header=True, inferSchema=T
 
 df.show()
 
-### metatrepw to spark df se pandas df gia na kanw tis metatropes 
+### spark df to pandas df 
 
 pandasDF = df.toPandas()
 
@@ -40,7 +40,7 @@ print(pandasDF)
 
 x_noisy = pandasDF
 
-######## to teliko dataframe me noise kai outliers kai NaN times ###########################
+######## final dataframe with noise, outliers and NaN times ###########################
 
 print(x_noisy)
 
@@ -48,12 +48,10 @@ x_noisy.dtypes
 
 print(x_noisy)
 
-##### mporw na gemisw ta NaN me tis mean h me tis median times
-### gia kalyterh apodosh tha tis syplhrwsw xrhsimooiontas ton KNN algorithm
+##### we can fill the NaN values using the mean or median values
+### for better results we can use the KNN algorithm
 
-### dimiourgisa to dataset to opoio exei enthorives times kai pleon yparxoun kai outliners enw exei epishs kai elipeis times
-
-### to epomeno vima einai na epexergastw ta outliners kai tis null times kai na xanatrexw tous algorithmoys gia na sygkrinw ta apotelesmata
+### the next step is to remove the outliners and the null values in order to run the algorithm model and see the results
 
 ################################################################ detect outliers ##########################################################################
 
@@ -64,7 +62,7 @@ x_noisy.sample(5)
 
 x_noisy.describe()
 
-# printing olokliro to dataset
+# printing the whole dataset
 
 # pd.set_option('display.max_rows', x_noisy.shape[0]+1)
 # print(x_noisy)
@@ -88,12 +86,12 @@ lower_limit
 
 upper_limit
 
+## first choise
 # Apply trimming
-
 ## x_noisy1 = x_noisy[(x_noisy['Age'] <= 73.0) & (x_noisy['Age'] >= 32.0)]
+# this technique deletes all rows tha consist of outliers
 
-# aytos o tropos diagrafei ta rows me outliers
-# egw tha antikathastisw ta outliers me to upper kai lower limit antistoixa
+# we will replace outliers using the upper and lower limit 
 
 ## second choise
  
@@ -136,7 +134,7 @@ print(x_noisy)
 
 # sex
 
-# exw times mono 0 kai 1 opote komple ## einai ok
+# values vary between 0 and 1 so its ok
 
 # ChestPainType
 
@@ -188,7 +186,7 @@ x_noisy['RestingBP'] = np.where(x_noisy['RestingBP'] >= upper_limit,
 sns.distplot(x_noisy['RestingBP'])
 sns.boxplot(x_noisy['RestingBP'])
 
-##### tha mporousa na to xanatrexw kialles fores wste na mn deixnei katholou outliers alla kai pali einai arketo
+##### we could redo this step for higher accuracy but its enough for now
 
 sns.distplot(x_noisy['RestingBP'])
 
@@ -384,7 +382,7 @@ print(x_noisy)
 
 #### outliers have been removed
 
-## twra prepei na antikathistisw tis NaN times
+## now we should replace the NaN values
 
 ##################################3####  Replace NaN times ##########################################
 
@@ -394,7 +392,7 @@ print(x_noisy)
 
 x_noisy.describe()
 
-## ftiaxnw to testdf gia na kanw test on how to fill NaN values
+## creating testdf to test on how to fill NaN values
 # testdf1 = x_noisy
 
 # print(testdf1)
@@ -410,7 +408,6 @@ x_noisy.isna().any()
 # In contrast, KNN Imputer maintains the value and variability of your datasets and yet it is more precise and efficient than using the average 
 # values.
 
-### https://stackoverflow.com/questions/64900801/implementing-knn-imputation-on-categorical-variables-in-an-sklearn-pipeline
 
 import numpy as np
 import pandas as pd
@@ -437,7 +434,7 @@ x_noisy[categorical] = x_noisy[categorical].apply(lambda series: pd.Series(
     index=series[series.notnull()].index
 ))
 
-# επομενως στα αριθμιτικά το mean και στα υπολοιπα το most frequent
+# numeric using mean and the rest using most frequent
 imp_num = IterativeImputer(estimator=RandomForestRegressor(),initial_strategy='mean',max_iter=10, random_state=0)
 imp_cat = IterativeImputer(estimator=RandomForestClassifier(), initial_strategy='most_frequent',max_iter=10, random_state=0)
     
@@ -458,7 +455,7 @@ dfn = spark.read.csv("/content/kaggleDATAset/noisyfile2.csv", header=True, infer
 
 dfn.show()
 
-#### tha valw to dataset a trexei st model pou eftiaxa na dw apodwsei
+#### Finally i going to use a ML model i created in order to check the denoising model
 
 train_data2,validation_test2 = dfn.randomSplit([0.8,0.2],seed=100)
 validation2, test2 = validation_test2.randomSplit([0.5, 0.5], seed = 4)
@@ -518,37 +515,6 @@ pg_lsvc = (ParamGridBuilder()
        .addGrid(lsvcCV.maxIter, [10, 100, 1000])
        .build())
 
-# gbtCV = GBTClassifier(labelCol='HeartDisease',featuresCol='features' , maxIter=30, maxDepth=3)
-# pipeline_gbtCV = basePipeline + [gbtCV]
-
-# Set the Parameters grid
-# pg_gbt = (ParamGridBuilder()
-#              .baseOn({pipeline.stages: pipeline_gbtCV}) 
-#              .addGrid(gbtCV.maxDepth, [2, 5])
-#              .addGrid(gbtCV.maxIter, [10, 30])
-#              .build())
-
-
-# dtc = DecisionTreeClassifier(labelCol='HeartDisease',featuresCol='features', maxDepth=3)
-# pl_dtc= basePipeline + [dtc]
-# pg_dtc = (ParamGridBuilder()
-#        .baseOn({pipeline.stages: pl_dtc})
-#        .addGrid(dtc.maxDepth, [4, 5, 6, 7])
-#        .addGrid(dtc.maxBins, [24, 28, 32, 36])
-#        .build())
-
-
-
-
- 
-
-# nb = NaiveBayes(labelCol='HeartDisease',featuresCol='features')
-# pl_nb = basePipeline + [nb]
-# pg_nb = (ParamGridBuilder()
-# .baseOn({pipeline.stages: pl_nb})
-# .addGrid(nb.smoothing,[0.8,1.0])
-# .build())
-
 paramGrid =pg_rf+pg_lr+pg_lsvc
 
 cvMM = (CrossValidator()
@@ -565,8 +531,6 @@ predictionsMM.groupBy("prediction").count().show()
 
 from sklearn.metrics import roc_curve , auc
 from pyspark.ml.functions import vector_to_array
-
-#https://stackoverflow.com/questions/52847408/pyspark-extract-roc-curve
 
 
 predictionsMM=cvModel.transform(validation_test2)
@@ -612,10 +576,12 @@ print("F1 score on validation: {:.4f} ".format(f1))
 pr = evaluator2.evaluate(predictionsMM, {evaluator2.metricName:'areaUnderPR'})
 print("Area under PR on validation set: {:.4f} ".format(pr))
 
-### ta apotelesmata pou eixe vgalei to modelo me to grid st dataset xwris thoryvo kai NaN times kai xwris outliers
-### oi opoies htan kai oi kalyteres
+### Below there are the results of the same ML model on the dataset without noise
 
 # auc :       0.94
 # accuracy :  88.9
 # f1 :        0.89
 # PR :        89.3
+### As it should be expected the metrics are slightly higher
+### However the fact that there is such a small deviation means that our denoise model is a great model
+
