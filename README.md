@@ -1,4 +1,4 @@
-# NoisyDataHandling
+# Noisy Data Handling
 
 <h2>In this repository we handle the problem of noise in a dataset </h2>
 Noisy Datasets usually consists of noisy data, outliers and null values.
